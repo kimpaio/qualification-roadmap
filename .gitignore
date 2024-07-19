@@ -1,0 +1,9 @@
+# 依存関係
+/backend/node_modules
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+
+# 環境設定ファイル
+/backend/.env
+/backend/.env.local
