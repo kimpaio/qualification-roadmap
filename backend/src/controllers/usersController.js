@@ -19,4 +19,14 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// 他のコントローラーのアクションは必要に応じて実装してください。
+exports.getUserById = (req, res) => {
+  // IDに基づいてユーザーを取得する処理
+};
+
+exports.updateUser = (req, res) => {
+  // ユーザーの情報を更新する処理
+};
+
+exports.deleteUser = (req, res) => {
+  // ユーザーを削除する処理
+};
