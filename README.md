@@ -1,4 +1,4 @@
-# Qualification-Roadmap
+we# Qualification-Roadmap
 
 <!-- ロゴを中央配置 -->
 ![Qualification Roadmap Logo](./frontend/public/assets/logo.svg)
@@ -165,7 +165,7 @@ Qualification Roadmapは、以下の機能を提供することで、ユーザ�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/Qualification-Roadmap.git
+git clone https://github.com/kimpaio/Qualification-Roadmap.git
 cd Qualification-Roadmap/backend
 
 # 依存関係をインストール
