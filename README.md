@@ -1,4 +1,4 @@
-we# Qualification-Roadmap
+# Qualification-Roadmap
 
 <!-- ロゴを中央配置 -->
 ![Qualification Roadmap Logo](./frontend/public/assets/logo.svg)
