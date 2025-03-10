@@ -1,7 +1,8 @@
 // src/components/Milestone.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button, Switch } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button, Switch, Dimensions, Platform } from 'react-native';
 import { getExams, getMilestones, createMilestone, updateMilestone, deleteMilestone, getUserMilestones } from '../api/api';
+import { normalize, getBreakpointName, responsiveStyle } from '../utils/responsive';
 
 const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユーザーID
   const [milestones, setMilestones] = useState([]);
@@ -16,6 +17,16 @@ const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユー
     user: userId,
     completed: false
   });
+  // 画面の向きとサイズを管理
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  // 画面サイズの変更を監視
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,12 +60,11 @@ const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユー
     }
 
     try {
-      // バックエンドに新しいマイルストーンを保存
-      const createdMilestone = await createMilestone(newMilestone);
-      
-      // 画面のマイルストーン一覧を更新
-      setMilestones([...milestones, createdMilestone]);
-      
+      const response = await createMilestone({
+        ...newMilestone,
+        user: userId
+      });
+      setMilestones([...milestones, response]);
       // フォームをリセット
       setNewMilestone({
         title: '',
@@ -64,7 +74,6 @@ const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユー
         user: userId,
         completed: false
       });
-      
       setError(null);
     } catch (err) {
       setError('マイルストーンの作成中にエラーが発生しました');
@@ -72,162 +81,206 @@ const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユー
     }
   };
 
-  const toggleMilestoneCompletion = async (id) => {
+  const handleToggleComplete = async (id, currentStatus) => {
     try {
-      // 更新するマイルストーンを見つける
-      const milestoneToUpdate = milestones.find(milestone => milestone._id === id);
-      if (!milestoneToUpdate) return;
-      
-      // 完了状態を反転
-      const updatedData = { ...milestoneToUpdate, completed: !milestoneToUpdate.completed };
-      
-      // バックエンドのデータを更新
-      const updatedMilestone = await updateMilestone(id, updatedData);
-      
-      // 画面のマイルストーン一覧を更新
-      const updatedMilestones = milestones.map(milestone => 
-        milestone._id === id ? updatedMilestone : milestone
-      );
-      
-      setMilestones(updatedMilestones);
+      const updatedMilestone = await updateMilestone(id, { completed: !currentStatus });
+      setMilestones(milestones.map(m => m._id === id ? updatedMilestone : m));
     } catch (err) {
       setError('マイルストーンの更新中にエラーが発生しました');
       console.error(err);
     }
   };
-  
+
   const handleDeleteMilestone = async (id) => {
     try {
-      // バックエンドからマイルストーンを削除
       await deleteMilestone(id);
-      
-      // 画面のマイルストーン一覧から削除
-      setMilestones(milestones.filter(milestone => milestone._id !== id));
+      setMilestones(milestones.filter(m => m._id !== id));
     } catch (err) {
       setError('マイルストーンの削除中にエラーが発生しました');
       console.error(err);
     }
   };
 
-  const renderMilestoneItem = ({ item }) => {
-    // バックエンドから取得したデータでは、examフィールドはすでにpopulateされている可能性がある
-    const relatedExam = item.exam && typeof item.exam === 'object' ? item.exam : exams.find(exam => exam._id === item.exam);
-    const isUpcoming = new Date(item.targetDate) > new Date();
+  // 入力フォームの値変更を処理
+  const handleChange = (name, value) => {
+    setNewMilestone({ ...newMilestone, [name]: value });
+  };
+
+  const handleSelectExam = (examId) => {
+    setNewMilestone({ ...newMilestone, exam: examId });
+  };
+
+  // 試験名を取得する関数
+  const getExamName = (examId) => {
+    const exam = exams.find(e => e._id === examId);
+    return exam ? exam.name : '未選択';
+  };
+
+  // 画面サイズに応じたレスポンシブスタイルを取得
+  const getResponsiveStyles = () => {
+    const breakpoint = getBreakpointName();
+    const isSmallDevice = ['xsmall', 'small'].includes(breakpoint);
     
+    return {
+      formContainerStyle: {
+        padding: isSmallDevice ? normalize(12) : normalize(16),
+      },
+      inputStyle: {
+        height: isSmallDevice ? normalize(40) : normalize(50),
+        fontSize: isSmallDevice ? normalize(14) : normalize(16),
+      },
+      buttonPadding: isSmallDevice ? normalize(8) : normalize(12),
+      milestoneItemPadding: isSmallDevice ? normalize(12) : normalize(16),
+    };
+  };
+
+  const responsiveStyles = getResponsiveStyles();
+
+  // 日付の整形
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  };
+
+  if (loading) {
     return (
-      <View style={[styles.milestoneItem, item.completed && styles.completedMilestone]}>
-        <TouchableOpacity 
-          style={styles.checkbox} 
-          onPress={() => toggleMilestoneCompletion(item._id)}
-        >
-          <View style={[styles.checkboxInner, item.completed && styles.checkboxChecked]} />
-        </TouchableOpacity>
-        
-        <View style={styles.milestoneContent}>
-          <Text style={[styles.milestoneTitle, item.completed && styles.completedText]}>
-            {item.title}
-          </Text>
-          <Text style={styles.milestoneDate}>
-            目標日: {new Date(item.targetDate).toLocaleDateString('ja-JP')}
-            {isUpcoming ? ` (残り${Math.ceil((new Date(item.targetDate) - new Date()) / (1000 * 60 * 60 * 24))}日)` : ''}
-          </Text>
-          <Text style={styles.milestoneDescription}>{item.description}</Text>
-          {relatedExam && (
-            <Text style={styles.relatedExam}>関連試験: {relatedExam.name}</Text>
-          )}
-        </View>
-        
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteMilestone(item._id)}
-        >
-          <Text style={styles.deleteButtonText}>削除</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <Text style={styles.message}>読み込み中...</Text>
       </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>マイルストーン</Text>
       
-      {/* 新しいマイルストーンを追加するフォーム */}
-      <View style={styles.formContainer}>
+      {/* マイルストーン作成フォーム */}
+      <View style={[styles.formContainer, responsiveStyles.formContainerStyle]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, responsiveStyles.inputStyle]}
           placeholder="タイトル"
           value={newMilestone.title}
-          onChangeText={(text) => setNewMilestone({ ...newMilestone, title: text })}
+          onChangeText={(text) => handleChange('title', text)}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, responsiveStyles.inputStyle]}
           placeholder="目標日 (YYYY-MM-DD)"
           value={newMilestone.targetDate}
-          onChangeText={(text) => setNewMilestone({ ...newMilestone, targetDate: text })}
+          onChangeText={(text) => handleChange('targetDate', text)}
         />
         <TextInput
-          style={styles.input}
-          placeholder="説明"
+          style={[styles.input, responsiveStyles.inputStyle]}
+          placeholder="説明（任意）"
           value={newMilestone.description}
-          onChangeText={(text) => setNewMilestone({ ...newMilestone, description: text })}
-          multiline={true}
-          numberOfLines={3}
+          onChangeText={(text) => handleChange('description', text)}
+          multiline
         />
         
-        {/* 試験の選択 */}
-        {!loading && exams.length > 0 && (
-          <View style={styles.examSelector}>
-            <Text style={styles.selectorLabel}>関連する試験:</Text>
-            {exams.map((exam) => (
+        {/* 試験選択 */}
+        <View style={styles.examSelector}>
+          <Text style={styles.selectorLabel}>関連する試験</Text>
+          <FlatList
+            data={exams}
+            keyExtractor={item => item._id}
+            horizontal={dimensions.width < 500} // 画面幅が狭い場合は水平スクロール
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={exam._id}
                 style={[
                   styles.examOption,
-                  newMilestone.exam === exam._id && styles.selectedExam,
+                  newMilestone.exam === item._id && styles.selectedExam,
+                  dimensions.width < 500 ? { marginRight: 10, minWidth: 150 } : {}
                 ]}
-                onPress={() => setNewMilestone({ ...newMilestone, exam: exam._id })}
+                onPress={() => handleSelectExam(item._id)}
+                activeOpacity={0.7} // タッチフィードバックを改善
               >
-                <Text
-                  style={[newMilestone.exam === exam._id && styles.selectedExamText]}
-                >
-                  {exam.name}
+                <Text style={[newMilestone.exam === item._id && styles.selectedExamText]}>
+                  {item.name}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
-        
-        <View style={styles.completedToggle}>
-          <Text style={styles.toggleLabel}>既に完了済み:</Text>
-          <Switch
-            value={newMilestone.completed}
-            onValueChange={(value) => setNewMilestone({ ...newMilestone, completed: value })}
-            trackColor={{ false: '#767577', true: '#81b0ff' }}
-            thumbColor={newMilestone.completed ? '#4285f4' : '#f4f3f4'}
+            )}
           />
         </View>
         
-        <Button
-          title="マイルストーンを追加"
+        {/* 完了状態トグル */}
+        <View style={styles.completedToggle}>
+          <Text style={styles.toggleLabel}>完了済み</Text>
+          <Switch
+            value={newMilestone.completed}
+            onValueChange={(value) => handleChange('completed', value)}
+            trackColor={{ false: '#c0c0c0', true: '#81b0ff' }}
+            thumbColor={newMilestone.completed ? '#4285f4' : '#f4f3f4'}
+            ios_backgroundColor="#c0c0c0"
+          />
+        </View>
+        
+        {/* 追加ボタン */}
+        <TouchableOpacity 
+          style={[styles.addButton, { padding: responsiveStyles.buttonPadding }]}
           onPress={handleAddMilestone}
-          color="#4285f4"
-        />
+          activeOpacity={0.7} // タッチフィードバックを改善
+        >
+          <Text style={styles.addButtonText}>マイルストーンを追加</Text>
+        </TouchableOpacity>
         
         {error && <Text style={styles.errorMessage}>{error}</Text>}
       </View>
       
       {/* マイルストーン一覧 */}
-      {loading ? (
-        <Text style={styles.message}>読み込み中...</Text>
-      ) : milestones.length === 0 ? (
-        <Text style={styles.message}>マイルストーンはありません</Text>
-      ) : (
+      {milestones.length > 0 ? (
         <FlatList
           data={milestones}
-          renderItem={renderMilestoneItem}
-          keyExtractor={(item) => item._id}
+          keyExtractor={item => item._id}
           style={styles.list}
+          renderItem={({ item }) => (
+            <View style={[
+              styles.milestoneItem, 
+              item.completed && styles.completedMilestone,
+              { padding: responsiveStyles.milestoneItemPadding }
+            ]}>
+              {/* 完了チェックボックス */}
+              <TouchableOpacity 
+                style={styles.checkbox}
+                onPress={() => handleToggleComplete(item._id, item.completed)}
+                activeOpacity={0.7} // タッチフィードバックを改善
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} // タッチ領域を拡大
+              >
+                <View style={[styles.checkboxInner, item.completed && styles.checkboxChecked]} />
+              </TouchableOpacity>
+              
+              <View style={styles.milestoneContent}>
+                <Text style={[styles.milestoneTitle, item.completed && styles.completedText]}>
+                  {item.title}
+                </Text>
+                <Text style={styles.milestoneDate}>
+                  目標日: {formatDate(item.targetDate)}
+                </Text>
+                {item.description && (
+                  <Text style={[styles.milestoneDescription, item.completed && styles.completedText]}>
+                    {item.description}
+                  </Text>
+                )}
+                {item.exam && (
+                  <Text style={styles.relatedExam}>
+                    試験: {getExamName(item.exam)}
+                  </Text>
+                )}
+              </View>
+              
+              {/* 削除ボタン */}
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={() => handleDeleteMilestone(item._id)}
+                activeOpacity={0.7} // タッチフィードバックを改善
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }} // タッチ領域を拡大
+              >
+                <Text style={styles.deleteButtonText}>削除</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         />
+      ) : (
+        <Text style={styles.message}>まだマイルストーンがありません。新しいマイルストーンを追加してください。</Text>
       )}
     </View>
   );
@@ -236,20 +289,20 @@ const Milestone = ({ userId = '650e1d8145fa1e67aad7e2ff' }) => { // 仮のユー
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: normalize(16),
     backgroundColor: '#f8f9fa',
   },
   header: {
-    fontSize: 24,
+    fontSize: normalize(24),
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: normalize(16),
     color: '#333',
   },
   formContainer: {
     backgroundColor: '#fff',
-    padding: 16,
+    padding: normalize(16),
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: normalize(16),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -257,27 +310,31 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   input: {
-    marginBottom: 12,
-    padding: 10,
+    marginBottom: normalize(12),
+    padding: normalize(10),
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 4,
     backgroundColor: '#f9f9f9',
+    fontSize: normalize(16),
+    minHeight: Platform.OS === 'ios' ? normalize(40) : normalize(44),
   },
   examSelector: {
-    marginBottom: 12,
+    marginBottom: normalize(12),
   },
   selectorLabel: {
-    marginBottom: 8,
+    marginBottom: normalize(8),
     fontWeight: 'bold',
     color: '#333',
+    fontSize: normalize(14),
   },
   examOption: {
-    padding: 10,
-    marginBottom: 4,
+    padding: normalize(10),
+    marginBottom: normalize(4),
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 4,
+    marginRight: normalize(8),
   },
   selectedExam: {
     backgroundColor: '#e8f0fe',
@@ -290,12 +347,25 @@ const styles = StyleSheet.create({
   completedToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: normalize(16),
   },
   toggleLabel: {
     flex: 1,
     color: '#333',
     fontWeight: 'bold',
+    fontSize: normalize(14),
+  },
+  addButton: {
+    backgroundColor: '#4285f4',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: normalize(8),
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: normalize(16),
   },
   list: {
     flex: 1,
@@ -303,8 +373,8 @@ const styles = StyleSheet.create({
   milestoneItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: 16,
-    marginBottom: 8,
+    padding: normalize(16),
+    marginBottom: normalize(8),
     backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
@@ -318,20 +388,20 @@ const styles = StyleSheet.create({
     borderColor: '#4285f4',
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: normalize(24),
+    height: normalize(24),
+    borderRadius: normalize(12),
     borderWidth: 2,
     borderColor: '#4285f4',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
+    marginRight: normalize(12),
+    marginTop: normalize(2),
   },
   checkboxInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: normalize(12),
+    height: normalize(12),
+    borderRadius: normalize(6),
     backgroundColor: 'transparent',
   },
   checkboxChecked: {
@@ -341,9 +411,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   milestoneTitle: {
-    fontSize: 16,
+    fontSize: normalize(16),
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: normalize(4),
     color: '#333',
   },
   completedText: {
@@ -351,41 +421,42 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   milestoneDate: {
-    fontSize: 14,
+    fontSize: normalize(14),
     color: '#4285f4',
-    marginBottom: 4,
+    marginBottom: normalize(4),
   },
   milestoneDescription: {
-    fontSize: 14,
+    fontSize: normalize(14),
     color: '#555',
-    marginBottom: 6,
+    marginBottom: normalize(6),
   },
   relatedExam: {
-    fontSize: 14,
+    fontSize: normalize(14),
     fontStyle: 'italic',
     color: '#4285f4',
   },
   message: {
-    fontSize: 16,
+    fontSize: normalize(16),
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: normalize(24),
     color: '#888',
   },
   errorMessage: {
     color: 'red',
-    marginTop: 10,
+    marginTop: normalize(10),
+    fontSize: normalize(14),
   },
   deleteButton: {
-    marginLeft: 8,
+    marginLeft: normalize(8),
     backgroundColor: '#f44336',
-    padding: 6,
+    padding: normalize(6),
     borderRadius: 4,
     alignSelf: 'center',
   },
   deleteButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: normalize(12),
   },
 });
 
