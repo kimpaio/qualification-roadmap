@@ -1,5 +1,6 @@
 # 依存関係
 /backend/node_modules
+/frontend/node_modules
 /node_modules/
 /npm-debug.log
 /yarn-error.log
@@ -7,3 +8,40 @@
 # 環境設定ファイル
 /backend/.env
 /backend/.env.local
+/frontend/.env
+/frontend/.env.local
+/.env
+/.env.local
+
+# ビルドディレクトリ
+/frontend/build
+/backend/build
+/build
+
+# ログファイル
+/logs
+*.log
+
+# 一時ファイル
+.DS_Store
+Thumbs.db
+
+# パッケージロックファイル
+/frontend/package-lock.json
+/backend/package-lock.json
+
+# キャッシュ
+.cache/
+.npm/
+
+# カバレッジレポート
+/coverage
+
+# テスト結果
+/test-results/
+
+# IDE関連ファイル
+.idea/
+.vscode/
+*.swp
+*.swo
