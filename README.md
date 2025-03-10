@@ -1,9 +1,7 @@
 # Qualification-Roadmap
 
-<p align="center">
-  <!-- ここにロゴ画像を配置する予定 -->
-  <img src="./frontend/assets/logo.png" alt="Qualification Roadmap Logo" width="150" onerror="this.style.display='none'">
-</p>
+<!-- ロゴを中央配置 -->
+![Qualification Roadmap Logo](./frontend/public/assets/logo.svg)
 
 <p align="center">
   <b>資格取得をサポートするロードマップアプリケーション</b><br>
@@ -14,14 +12,14 @@
 
 <p align="center">
   <!-- フロントエンド -->
-  <img src="https://img.shields.io/badge/-React%20Native-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native">
-  <img src="https://img.shields.io/badge/-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+  ![React Native](https://img.shields.io/badge/-React%20Native-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+  ![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
   <!-- バックエンド -->
-  <img src="https://img.shields.io/badge/-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/-Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
-  <img src="https://img.shields.io/badge/-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+  ![Node.js](https://img.shields.io/badge/-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+  ![Express](https://img.shields.io/badge/-Express-000000?style=for-the-badge&logo=express&logoColor=white)
+  ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
   <!-- ツール -->
-  <img src="https://img.shields.io/badge/-Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git">
+  ![Git](https://img.shields.io/badge/-Git-F05032?style=for-the-badge&logo=git&logoColor=white)
 </p>
 
 ## 詳細な技術スタック / Detailed Tech Stack
@@ -113,7 +111,7 @@ Qualification Roadmapは、以下の機能を提供することで、ユーザ�
 │   │   │   └── store.js           # ストア設定
 │   │   │
 │   │   ├── assets/                # アセット
-│   │   │   ├── logo.png           # ロゴ
+│   │   │   ├── logo.svg           # ロゴ
 │   │   │   └── icons/             # アイコン
 │   │   │
 │   │   └── App.js                 # アプリエントリーポイント

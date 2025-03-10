@@ -1,0 +1,12 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景の円 -->
+  <circle cx="100" cy="100" r="90" fill="#4A6FDC" />
+  <!-- Q文字 -->
+  <path d="M75 70C75 65.5817 78.5817 62 83 62H117C121.418 62 125 65.5817 125 70V110C125 114.418 121.418 118 117 118H83C78.5817 118 75 114.418 75 110V70Z" fill="white" />
+  <path d="M83 70L117 70L117 110L83 110L83 70Z" fill="#4A6FDC" />
+  <path d="M116 95L105 110L125 138" stroke="white" stroke-width="12" stroke-linecap="round" />
+  <!-- R文字（ロードマップを表す） -->
+  <path d="M50 138L60 118H80L65 138" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- チェックマーク（資格達成を表す） -->
+  <path d="M150 80L135 100L125 90" stroke="#5ECE7B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

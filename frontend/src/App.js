@@ -3,7 +3,9 @@ import { View, StyleSheet, ScrollView, SafeAreaView, Dimensions } from 'react-na
 import Reminder from './components/Reminder';
 import StudyLog from './components/StudyLog';
 import Milestone from './components/Milestone';
+import Header from './components/Header';
 import { getOrientation, addDimensionsListener } from './utils/responsive';
+import { BRAND_COLORS, SHADOWS, SPACING, BORDER_RADIUS } from './utils/theme';
 
 const App = () => {
   const [orientation, setOrientation] = useState(getOrientation());
@@ -45,6 +47,7 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <Header />
       <ScrollView contentContainerStyle={[styles.scrollContainer, orientation === 'landscape' ? { paddingHorizontal: 10 } : {}]}>
         <View style={[styles.container, orientation === 'landscape' ? landscapeLayout : portraitLayout]}>
           <View style={[styles.section, getSectionStyle()]}>
@@ -65,25 +68,21 @@ const App = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: BRAND_COLORS.background.primary,
   },
   scrollContainer: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.md,
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: BRAND_COLORS.background.primary,
   },
   section: {
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    padding: SPACING.md,
+    backgroundColor: BRAND_COLORS.background.secondary,
+    borderRadius: BORDER_RADIUS.md,
+    ...SHADOWS.md,
   }
 });
 
