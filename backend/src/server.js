@@ -1,6 +1,7 @@
 // Expressアプリケーションのメインファイルを定義します。
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
 // セキュリティ関連パッケージをインポート
@@ -26,6 +27,7 @@ const usersRouter = require('./routes/users');
 const remindersRouter = require('./routes/reminders');
 const studyLogsRouter = require('./routes/studyLogs');
 const milestonesRouter = require('./routes/milestones');
+const authRouter = require('./routes/auth');
 
 // エラーハンドリングミドルウェアをインポート
 const { notFoundHandler, errorConverter } = require('./middleware/errorHandlers');
@@ -48,6 +50,15 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// 認証レートリミッターを設定
+const authLimiter = rateLimit({
+  max: 10, // 10リクエストまで
+  windowMs: 15 * 60 * 1000, // 15分あたり
+  message: '認証リクエストが多すぎます。しばらくしてから再試行してください。'
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgotPassword', authLimiter);
+
 // クロスサイトスクリプティング(XSS)攻撃の防止
 app.use(xss());
 
@@ -69,16 +80,24 @@ app.use((req, res, next) => {
 });
 
 // CORS設定
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // リクエストのJSONボディを解析するためのミドルウェアを設定します。
 app.use(express.json({ limit: '10kb' })); // リクエストボディサイズを制限
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// Cookieパーサーを設定
+app.use(cookieParser());
+
 // 構造化されたリクエストロギングミドルウェア
 app.use(requestLogger);
 
 // APIルートを設定します。
+app.use('/api/auth', authRouter);
 app.use('/api/books', booksRouter);
 app.use('/api/exams', examsRouter);
 app.use('/api/users', usersRouter);
